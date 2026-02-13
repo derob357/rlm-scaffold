@@ -1,5 +1,5 @@
 """
-rlm_helper.py — Anthropic API bridge for RLM sub-queries.
+rlm_helper.py — LLM API bridge for RLM sub-queries.
 
 Provides llm_query() and llm_query_batched() for recursive sub-LM calls.
 Also runnable as: python3 rlm_helper.py "prompt"
@@ -20,7 +20,7 @@ BATCH_WORKERS = 8
 
 
 def _get_client():
-    """Lazy-initialize the Anthropic client."""
+    """Lazy-initialize the API client."""
     global _client
     if _client is None:
         import anthropic
@@ -36,11 +36,11 @@ def _get_client():
 
 
 def llm_query(prompt, model=None, max_tokens=None, system=None):
-    """Send a single prompt to the Anthropic API and return the text response.
+    """Send a single prompt to the LLM API and return the text response.
 
     Args:
         prompt: The user message to send.
-        model: Model ID (default: Claude Sonnet 4.5).
+        model: Model ID (default: DEFAULT_MODEL).
         max_tokens: Max tokens in response (default: 4096).
         system: Optional system prompt.
 
@@ -77,7 +77,7 @@ def llm_query_batched(prompts, model=None, max_tokens=None, system=None):
 
     Args:
         prompts: List of prompt strings.
-        model: Model ID (default: Claude Sonnet 4.5).
+        model: Model ID (default: DEFAULT_MODEL).
         max_tokens: Max tokens per response.
         system: Optional system prompt (shared across all calls).
 

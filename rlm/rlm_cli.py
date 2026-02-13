@@ -3,9 +3,9 @@
 rlm_cli.py — Standalone RLM CLI implementing Algorithm 1 from the paper.
 
 Usage:
-    echo "input" | claude-rlm "query"
-    claude-rlm --file input.txt "query"
-    claude-rlm "query"  # interactive, reads from stdin
+    echo "input" | rlm "query"
+    rlm --file input.txt "query"
+    rlm "query"  # interactive, reads from stdin
 """
 
 import argparse
@@ -170,8 +170,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="RLM — Recursive Language Model CLI",
         epilog="Examples:\n"
-               "  echo 'hello' | claude-rlm 'What does this say?'\n"
-               "  claude-rlm --file doc.txt 'Summarize this'\n",
+               "  echo 'hello' | rlm 'What does this say?'\n"
+               "  rlm --file doc.txt 'Summarize this'\n",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("query", help="The question or task to perform on the input")

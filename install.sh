@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# install.sh — Install the RLM scaffold for Claude Code
+# install.sh — Install the RLM scaffold
 #
 # Usage:
 #   ./install.sh
@@ -54,8 +54,8 @@ fi
 
 if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
     echo ""
-    echo -e "${YELLOW}An Anthropic API key is required for RLM sub-queries.${NC}"
-    echo "Get one at: https://console.anthropic.com/settings/keys"
+    echo -e "${YELLOW}An API key is required for RLM sub-queries.${NC}"
+    echo "Set ANTHROPIC_API_KEY in your environment."
     echo ""
     read -rp "Paste your ANTHROPIC_API_KEY (or press Enter to skip): " ANTHROPIC_API_KEY
     if [ -z "$ANTHROPIC_API_KEY" ]; then
@@ -139,7 +139,7 @@ if add_line_if_missing 'export PYTHONPATH="$HOME/.claude/plugins/rlm:$PYTHONPATH
     CHANGED=1
 fi
 
-if add_line_if_missing 'claude-rlm() { python3 "$HOME/.claude/plugins/rlm/rlm_cli.py" "$@"; }' "$PROFILE"; then
+if add_line_if_missing 'rlm() { python3 "$HOME/.claude/plugins/rlm/rlm_cli.py" "$@"; }' "$PROFILE"; then
     CHANGED=1
 fi
 
@@ -164,5 +164,5 @@ echo ""
 echo "  Then test with:"
 echo ""
 echo "    python3 -c \"from rlm_helper import llm_query; print(llm_query('Say hi'))\""
-echo "    echo 'Hello world' | claude-rlm 'What does this say?'"
+echo "    echo 'Hello world' | rlm 'What does this say?'"
 echo ""

@@ -1,6 +1,6 @@
-# RLM Scaffold for Claude Code
+# RLM Scaffold
 
-An implementation of the **Recursive Language Model** pattern ([Zhang et al., MIT, 2026](https://arxiv.org/abs/2602.05568)) for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). RLM dramatically improves LLM performance on long-context tasks by offloading input to a REPL and having the model write code to inspect, chunk, and recursively sub-query itself.
+An implementation of the **Recursive Language Model** pattern ([Zhang et al., MIT, 2026](https://arxiv.org/abs/2602.05568)). RLM dramatically improves LLM performance on long-context tasks by offloading input to a REPL and having the model write code to inspect, chunk, and recursively sub-query itself.
 
 ## What It Does
 
@@ -16,30 +16,30 @@ This outperforms vanilla LLMs by up to **2x** on long-context benchmarks.
 
 ## Two Integration Modes
 
-### Mode 1 — Claude Code (Interactive)
+### Mode 1 — AI Coding Assistant (Interactive)
 
-When using `claude` interactively, Claude automatically knows about the RLM helper (via `~/.claude/CLAUDE.md`) and can use it through its Bash tool:
+When using an AI coding assistant interactively, it automatically knows about the RLM helper (via `~/.claude/CLAUDE.md`) and can use it through its Bash/shell tool:
 
 ```
 > Analyze all the Python files in this project and find security issues
 
-Claude will automatically use rlm_helper to chunk files, sub-query for
+The assistant will automatically use rlm_helper to chunk files, sub-query for
 each file's issues, and synthesize a report.
 ```
 
 ### Mode 2 — Standalone CLI
 
-`claude-rlm` runs the full RLM loop independently:
+`rlm` runs the full RLM loop independently:
 
 ```bash
 # Pipe input
-cat large_document.txt | claude-rlm "Summarize the key arguments"
+cat large_document.txt | rlm "Summarize the key arguments"
 
 # File flag
-claude-rlm --file codebase.py "Find all TODO comments and categorize them"
+rlm --file codebase.py "Find all TODO comments and categorize them"
 
 # Verbose mode (shows iterations on stderr)
-cat data.csv | claude-rlm -v "What trends do you see in this data?"
+cat data.csv | rlm -v "What trends do you see in this data?"
 ```
 
 ## Quick Install
@@ -53,10 +53,10 @@ cd rlm-scaffold
 The install script will:
 1. Check for Python 3
 2. Install the `anthropic` SDK
-3. Prompt for your Anthropic API key (if not already set)
+3. Prompt for your API key (if not already set)
 4. Copy plugin files to `~/.claude/plugins/rlm/`
 5. Create/update `~/.claude/CLAUDE.md` with RLM instructions
-6. Add `PYTHONPATH`, `ANTHROPIC_API_KEY`, and the `claude-rlm` function to your shell profile
+6. Add `PYTHONPATH`, `ANTHROPIC_API_KEY`, and the `rlm` function to your shell profile
 
 After installing, activate with:
 
@@ -89,12 +89,12 @@ Add to your `~/.zshrc` or `~/.bashrc`:
 ```bash
 export ANTHROPIC_API_KEY="your-key-here"
 export PYTHONPATH="$HOME/.claude/plugins/rlm:$PYTHONPATH"
-claude-rlm() { python3 "$HOME/.claude/plugins/rlm/rlm_cli.py" "$@"; }
+rlm() { python3 "$HOME/.claude/plugins/rlm/rlm_cli.py" "$@"; }
 ```
 
 ### 4. Set Up CLAUDE.md
 
-Copy the Claude Code instructions:
+Generate the assistant instructions file:
 
 ```bash
 cp ~/.claude/plugins/rlm/rlm_prompts.py /tmp/
@@ -120,17 +120,14 @@ for r in results: print(r)
 "
 
 # 3. Standalone CLI
-echo "The Eiffel Tower is in Paris, France." | claude-rlm "What country is mentioned?"
-
-# 4. Claude Code integration
-claude -p "Use the RLM helper to query a sub-LLM for a joke"
+echo "The Eiffel Tower is in Paris, France." | rlm "What country is mentioned?"
 ```
 
 ## Architecture
 
 ```
 ~/.claude/plugins/rlm/
-├── rlm_helper.py      # llm_query() and llm_query_batched() — Anthropic API bridge
+├── rlm_helper.py      # llm_query() and llm_query_batched() — LLM API bridge
 ├── rlm_cli.py         # Standalone RLM CLI (full iteration loop)
 ├── rlm_repl.py        # Sandboxed Python REPL with injected functions
 ├── rlm_prompts.py     # System prompts for standalone + CLAUDE.md
@@ -142,18 +139,18 @@ claude -p "Use the RLM helper to query a sub-LLM for a joke"
 
 | Module | Purpose |
 |--------|---------|
-| `rlm_helper.py` | Anthropic API bridge. `llm_query()` for single calls, `llm_query_batched()` for parallel calls (up to 8 workers). Lazy-initialized client with exponential backoff retry. |
+| `rlm_helper.py` | LLM API bridge. `llm_query()` for single calls, `llm_query_batched()` for parallel calls (up to 8 workers). Lazy-initialized client with exponential backoff retry. |
 | `rlm_repl.py` | `exec()`-based REPL with persistent namespace. Injects `llm_query`, `llm_query_batched`, `FINAL()`, `FINAL_VAR()`, `SHOW_VARS()` into the execution environment. |
-| `rlm_cli.py` | Implements Algorithm 1 from the paper. Root model (Opus 4.6) generates code in `` ```repl``` `` blocks, REPL executes them, output is truncated and fed back, loop until `FINAL()`. |
+| `rlm_cli.py` | Implements Algorithm 1 from the paper. Root model generates code in `` ```repl``` `` blocks, REPL executes them, output is truncated and fed back, loop until `FINAL()`. |
 | `rlm_prompts.py` | System prompts teaching the LLM how to use the REPL, chunking strategies, and the FINAL protocol. |
 | `rlm_parsing.py` | Regex extraction of `FINAL()`, `FINAL_VAR()`, `` ```repl``` `` code blocks, and output truncation (20K char limit). |
 
 ### Models Used
 
-| Role | Model | Purpose |
-|------|-------|---------|
-| Root LLM (CLI) | Claude Opus 4.6 | Orchestrates the RLM loop, generates REPL code |
-| Sub-LLM calls | Claude Sonnet 4.5 | Processes individual chunks (fast, cost-effective) |
+| Role | Model ID | Purpose |
+|------|----------|---------|
+| Root LLM (CLI) | `claude-opus-4-6` | Orchestrates the RLM loop, generates REPL code |
+| Sub-LLM calls | `claude-sonnet-4-5-20250929` | Processes individual chunks (fast, cost-effective) |
 
 ## Configuration
 
@@ -161,7 +158,7 @@ claude -p "Use the RLM helper to query a sub-LLM for a joke"
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | — | Your Anthropic API key |
+| `ANTHROPIC_API_KEY` | Yes | — | Your API key |
 | `PYTHONPATH` | Yes | — | Must include `~/.claude/plugins/rlm` |
 
 ### CLI Options
@@ -180,7 +177,7 @@ options:
 
 ## CLAUDE.md Content
 
-The install script creates `~/.claude/CLAUDE.md` with instructions that teach Claude Code:
+The install script creates `~/.claude/CLAUDE.md` with instructions that teach the AI assistant:
 
 - When to use RLM (large inputs, multi-doc analysis)
 - How to call `llm_query` and `llm_query_batched` via the Bash tool
@@ -191,8 +188,7 @@ The install script creates `~/.claude/CLAUDE.md` with instructions that teach Cl
 
 - **macOS or Linux** (tested on macOS)
 - **Python 3.9+**
-- **Anthropic API key** — get one at [console.anthropic.com](https://console.anthropic.com/settings/keys)
-- **Claude Code** (for Mode 1 integration) — install from [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code)
+- **API key** for the `anthropic` SDK
 
 ## Uninstall
 
@@ -206,7 +202,7 @@ rm -rf ~/.claude/plugins/rlm
 # Remove from shell profile — delete these lines from ~/.zshrc or ~/.bashrc:
 #   export ANTHROPIC_API_KEY="..."
 #   export PYTHONPATH="$HOME/.claude/plugins/rlm:$PYTHONPATH"
-#   claude-rlm() { ... }
+#   rlm() { ... }
 ```
 
 ## License

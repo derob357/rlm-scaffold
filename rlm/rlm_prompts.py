@@ -2,7 +2,7 @@
 rlm_prompts.py — System prompts for the RLM scaffold.
 
 Contains the standalone RLM system prompt and the CLAUDE.md content
-for Claude Code integration.
+for AI coding assistant integration.
 """
 
 STANDALONE_SYSTEM_PROMPT = """\
@@ -155,10 +155,10 @@ PYEOF
 
 ### Standalone CLI
 
-For piped input, use `claude-rlm`:
+For piped input, use `rlm`:
 ```bash
-cat large_file.txt | claude-rlm "Summarize this document"
-claude-rlm --file report.pdf "What are the key findings?"
+cat large_file.txt | rlm "Summarize this document"
+rlm --file report.pdf "What are the key findings?"
 ```
 
 ## Tips
@@ -166,5 +166,5 @@ claude-rlm --file report.pdf "What are the key findings?"
 - Store large content in Python variables, not in conversation context
 - Use `llm_query_batched()` for independent sub-queries (up to 8 parallel)
 - Keep sub-prompts specific and focused — include task context
-- Default sub-model is Claude Sonnet 4.5; override with `model=` parameter
+- Default sub-model is the fast model; override with `model=` parameter
 """
